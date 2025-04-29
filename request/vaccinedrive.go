@@ -57,6 +57,7 @@ func (r VaccineDriveRequest) Bind(c echo.Context, req interface{}, model *models
 	case *GetVaccineDriveRequest:
 		model.Id = req.(*GetVaccineDriveRequest).Id
 		model.VaccineName = req.(*GetVaccineDriveRequest).Name
+		log.Println("req is ", model)
 	case **VaccineDriveUpdateRequest:
 		model.Id = req.(*VaccineDriveUpdateRequest).Id
 	default:
