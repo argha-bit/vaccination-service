@@ -75,7 +75,7 @@ func createFilterstring(drive *models.VaccineDrive) string {
 	} else if drive.VaccineName != "" {
 		filterString += fmt.Sprintf("vaccine_name LIKE '%s'", drive.VaccineName)
 	} else {
-		filterString += "drive_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)"
+		filterString += "drive_date <= DATE_ADD(NOW(), INTERVAL 30 DAY)"
 	}
 	return filterString
 }
