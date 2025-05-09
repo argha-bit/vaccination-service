@@ -96,9 +96,6 @@ func (resp VaccineDriveResposne) ProcessVaccineDriveResponse(req, data interface
 				collectionData = append(collectionData, vaccineDriveResponse)
 			}
 			r.Data = collectionData
-			if len(collectionData) == 1 {
-				r.Data = collectionData[0]
-			}
 		}
 
 	}
