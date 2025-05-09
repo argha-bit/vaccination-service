@@ -8,4 +8,5 @@ RUN go build -o ./vaccination-service cmd/main.go
 FROM alpine:latest
 WORKDIR /code
 COPY --from=builder /app/vaccination-service ./vaccination-service
+COPY --from=builder /app/.env .
 ENTRYPOINT ["./vaccination-service"]

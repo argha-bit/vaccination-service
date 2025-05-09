@@ -1,16 +1,21 @@
 package vaccinedrive
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"vaccination-service/adapters/mysql"
+	"vaccination-service/adapters/rabbitmq"
 	"vaccination-service/models"
 	"vaccination-service/repository"
 	"vaccination-service/request"
+
+	"github.com/streadway/amqp"
 )
 
 type VaccineRepository struct {
-	DB *mysql.MysqlConnect
+	DB     *mysql.MysqlConnect
+	Rabbit *rabbitmq.RabbitChannel
 }
 
 func (v *VaccineRepository) GetVaccineDrive(filter string) ([]models.VaccineDrive, error) {
@@ -33,7 +38,14 @@ func (v *VaccineRepository) GetVaccineDrive(filter string) ([]models.VaccineDriv
 	return drives, nil
 }
 func (v *VaccineRepository) CreateDrive(drive *models.VaccineDrive) error {
-	return v.DB.Table("vaccination_drives").Create(drive).Error
+	err := v.DB.Table("vaccination_drives").Create(drive).Error
+	body, _ := json.Marshal(drive)
+	v.Rabbit.Publish("", "vaccine-drive-notification", false, false, amqp.Publishing{
+		DeliveryMode: 2,
+		ContentType:  "text/plain",
+		Body:         body,
+	})
+	return err
 }
 func (v *VaccineRepository) UpdateVaccineDrive(drive *request.VaccineDriveUpdateRequest) error {
 	updateMap := map[string]interface{}{}
@@ -53,8 +65,9 @@ func (v *VaccineRepository) UpdateVaccineDrive(drive *request.VaccineDriveUpdate
 	return v.DB.Table("vaccination_drives").Where(fmt.Sprintf("id = %d", drive.Id)).Updates(updateMap).Error
 }
 
-func NewVaccineRepositoryHandler(db *mysql.MysqlConnect) repository.VaccineRepositoryHandler {
+func NewVaccineRepositoryHandler(db *mysql.MysqlConnect, rabbit *rabbitmq.RabbitChannel) repository.VaccineRepositoryHandler {
 	return &VaccineRepository{
-		DB: db,
+		DB:     db,
+		Rabbit: rabbit,
 	}
 }

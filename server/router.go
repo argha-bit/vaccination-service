@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"vaccination-service/adapters/mysql"
+	"vaccination-service/adapters/rabbitmq"
 	vaccineControl "vaccination-service/controller/vaccinationservice"
 	rp "vaccination-service/repository/vaccinedrive"
 	"vaccination-service/request"
@@ -35,13 +36,14 @@ func newRouter() *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Validator = validator.NewValidator()
 	dbConn, err := mysql.GetMySQLConnect()
+	conn := rabbitmq.GetRabbitConn()
 	if err != nil {
 		log.Println("error in connecting to db", err.Error())
 		os.Exit(1)
 	}
 
 	vaccineDriveRequest := request.NewVaccineDriveRequestHandler()
-	vaccineDriveReqpository := rp.NewVaccineRepositoryHandler(dbConn)
+	vaccineDriveReqpository := rp.NewVaccineRepositoryHandler(dbConn, conn)
 	vaccineDriveUsecase := uc.NewVaccineRepositoryHandler(vaccineDriveReqpository)
 	vaccineResponse := response.NewVaccineDriveResponseHandler()
 	vaccineControl.NewVaccineServiceController(e, vaccineDriveRequest, vaccineDriveUsecase, vaccineResponse)
